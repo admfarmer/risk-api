@@ -1,18 +1,24 @@
 /// <reference path="../typings.d.ts" />
 
 import path = require('path');
-import * as http from 'http'
 import * as HttpStatus from 'http-status-codes';
 import * as fastify from 'fastify';
-import * as Knex from 'knex';
 
-require('dotenv').config({ path: path.join(__dirname, '../office-config') });
+const serveStatic = require('serve-static');
 
-import { Server, IncomingMessage, ServerResponse, ServerRequest } from 'http';
+require('dotenv').config({ path: path.join(__dirname, '../config') });
+
+import { Server, IncomingMessage, ServerResponse } from 'http';
 
 import helmet = require('fastify-helmet');
 
-const app: fastify.FastifyInstance<Server, IncomingMessage, ServerResponse> = fastify({ logger: { level: 'info' }, bodyLimit: 5 * 1048576 });
+const app: fastify.FastifyInstance<Server, IncomingMessage, ServerResponse> = fastify({
+  logger: {
+    level: 'error',
+    prettyPrint: true
+  },
+  bodyLimit: 5 * 1048576,
+});
 
 app.register(require('fastify-formbody'));
 app.register(require('fastify-cors'), {});
@@ -23,18 +29,23 @@ app.register(
 );
 
 app.register(require('fastify-rate-limit'), {
-  max: +process.env.MAX_CONNECTION_PER_MINUTE || 1000,
+  max: +process.env.MAX_CONNECTION_PER_MINUTE || 1000000,
   timeWindow: '1 minute'
 });
 
-app.register(require('fastify-static'), {
-  root: path.join(__dirname, '../public'),
-  prefix: '/html',
-});
+app.use(serveStatic(path.join(__dirname, '../public')));
 
 app.register(require('fastify-jwt'), {
   secret: process.env.SECRET_KEY
 });
+
+app.register(require('point-of-view'), {
+  engine: {
+    ejs: require('ejs')
+  }
+});
+
+app.register(require('fastify-ws'), {});
 
 app.decorate("authenticate", async (request, reply) => {
   let token: string = null;
@@ -53,7 +64,7 @@ app.decorate("authenticate", async (request, reply) => {
     reply.status(HttpStatus.UNAUTHORIZED).send({
       statusCode: HttpStatus.UNAUTHORIZED,
       error: HttpStatus.getStatusText(HttpStatus.UNAUTHORIZED),
-      message: 'Access denied!'
+      message: '401 UNAUTHORIZED!'
     })
   }
 });
@@ -77,21 +88,49 @@ app.register(require('./db/conn'), {
         });
       }
     },
-    debug: true,
+    debug: false,
   },
-  connectionName: 'dbHis'
+  connectionName: 'db'
 });
 
+app.decorate('verifyAdmin', function (request, reply, done) {
+  if (request.user.userType === 'ADMIN') {
+    done();
+  } else {
+    reply.status(HttpStatus.UNAUTHORIZED).send({ statusCode: HttpStatus.UNAUTHORIZED, message: HttpStatus.getStatusText(HttpStatus.UNAUTHORIZED) });
+  }
+});
+
+app.decorate('verifyMember', function (request, reply, done) {
+  if (request.user.userType === 'MEMBER') {
+    done();
+  } else {
+    reply.status(HttpStatus.UNAUTHORIZED).send({ statusCode: HttpStatus.UNAUTHORIZED, message: HttpStatus.getStatusText(HttpStatus.UNAUTHORIZED) });
+  }
+});
 
 app.register(require('./routes/index'), { prefix: '/v1', logger: true });
+app.register(require('./routes/login'), { prefix: '/v1/login', logger: true });
+app.register(require('./routes/users'), { prefix: '/v1/users', logger: true });
+app.register(require('./routes/persons'), { prefix: '/v1/persons', logger: true });
+app.register(require('./routes/incidents'), { prefix: '/v1/incidents', logger: true });
+app.register(require('./routes/departs'), { prefix: '/v1/departs', logger: true });
+app.register(require('./routes/levels'), { prefix: '/v1/levels', logger: true });
+app.register(require('./routes/accounts'), { prefix: '/v1/accounts', logger: true });
+app.register(require('./routes/sides'), { prefix: '/v1/sides', logger: true });
+app.register(require('./routes/safetys'), { prefix: '/v1/safetys', logger: true });
+app.register(require('./routes/types'), { prefix: '/v1/types', logger: true });
+app.register(require('./routes/notypes'), { prefix: '/v1/notypes', logger: true });
 
-app.get('/', async (req: fastify.FastifyRequest<http.IncomingMessage>, reply: fastify.FastifyReply<http.ServerResponse>) => {
-  reply.code(200).send({ message: 'Fastify, RESTful API services!' })
+app.get('/', async (req: fastify.Request, reply: fastify.Reply) => {
+  reply.code(200).send({ message: 'Welcome to Risk API services!' })
 });
 
-const port = +process.env.PORT || 3000;
+const port = +process.env.HTTP_PORT || 3000;
+const host = process.env.HTTP_ADDRESS || '0.0.0.0';
 
-app.listen(port, '0.0.0.0', (err) => {
+app.listen(port, host, (err) => {
   if (err) throw err;
+
   console.log(app.server.address());
 });
