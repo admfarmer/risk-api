@@ -121,6 +121,9 @@ app.register(require('./routes/sides'), { prefix: '/v1/sides', logger: true });
 app.register(require('./routes/safetys'), { prefix: '/v1/safetys', logger: true });
 app.register(require('./routes/types'), { prefix: '/v1/types', logger: true });
 app.register(require('./routes/notypes'), { prefix: '/v1/notypes', logger: true });
+app.register(require('./routes/l_title'), { prefix: '/v1/titles', logger: true });
+app.register(require('./routes/l_sex'), { prefix: '/v1/sexs', logger: true });
+app.register(require('./routes/position'), { prefix: '/v1/positions', logger: true });
 
 app.get('/', async (req: fastify.Request, reply: fastify.Reply) => {
   reply.code(200).send({ message: 'Welcome to Risk API services!' })
