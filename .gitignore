@@ -1,12 +1,5 @@
-node_modules/*
-typings/*
-npm-debug.log
-.settings/*
-.git/*
-bower_components/*
-dist/*
-app/*
+node_modules
+config
 .DS_Store
-.idea
-.env
-office-config
+package-lock.json
+dist
