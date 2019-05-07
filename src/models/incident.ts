@@ -2,6 +2,18 @@ import Knex = require('knex');
 
 export class InciDentModels {
 
+    listTime(knex: Knex) {
+        return knex('l_time')
+    }
+
+    listAffected(knex: Knex) {
+        return knex('l_affected')
+    }
+
+    listLocation(knex: Knex) {
+        return knex('l_location')
+    }
+
     listNotChief(knex: Knex) {
         return knex('risk_incident as r')
             .select('r.*')

@@ -13,10 +13,13 @@ export class AccountModels {
 
     select(knex: Knex, id_side: any, id_safety: any, id_type: any, id_notype: any) {
         return knex('risk_account')
-            .where('id_side', id_side)
-            .where('id_safety', id_safety)
-            .where('id_type', id_type)
-            .where('id_notype', id_notype)
+            .where(function () {
+                this.where('id_side', id_side)
+                    .andWhere('id_safety', id_safety)
+                    .andWhere('id_type', id_type)
+                    .andWhere('id_notype', id_notype)
+            })
+
     }
 
     save(knex: Knex, data: any) {

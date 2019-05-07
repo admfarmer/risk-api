@@ -7,10 +7,44 @@ import * as crypto from 'crypto';
 
 import { InciDentModels } from '../models/incident';
 
+
 const inciDentModels = new InciDentModels();
 
 const router = (fastify, { }, next) => {
     var db: Knex = fastify.db;
+
+    fastify.get('/listTime', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+
+        try {
+            const rs: any = await inciDentModels.listTime(db);
+            reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs })
+        } catch (error) {
+            fastify.log.error(error);
+            reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+        }
+    })
+
+    fastify.get('/listLocation', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+
+        try {
+            const rs: any = await inciDentModels.listLocation(db);
+            reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs })
+        } catch (error) {
+            fastify.log.error(error);
+            reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+        }
+    })
+
+    fastify.get('/listAffected', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+
+        try {
+            const rs: any = await inciDentModels.listAffected(db);
+            reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs })
+        } catch (error) {
+            fastify.log.error(error);
+            reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+        }
+    })
 
     fastify.get('/listNotChief', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
@@ -22,6 +56,7 @@ const router = (fastify, { }, next) => {
             reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
         }
     })
+
     fastify.get('/listChief', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
 
         try {

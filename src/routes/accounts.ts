@@ -25,9 +25,21 @@ const router = (fastify, { }, next) => {
 
     fastify.get('/select/:code_account', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
         const code_account = req.params.code_account;
-        console.log(code_account);
         try {
             const rs: any = await accountModels.selectacc(db, code_account);
+            reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs })
+        } catch (error) {
+            fastify.log.error(error);
+            reply.status(HttpStatus.INTERNAL_SERVER_ERROR).send({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: HttpStatus.getStatusText(HttpStatus.INTERNAL_SERVER_ERROR) })
+        }
+    })
+    fastify.get('/gitSelect/:id_side/:id_safety/:id_type/:id_notype', { beforeHandler: [fastify.authenticate] }, async (req: fastify.Request, reply: fastify.Reply) => {
+        const id_side = req.params.id_side;
+        const id_safety = req.params.id_safety;
+        const id_type = req.params.id_type;
+        const id_notype = req.params.id_notype;
+        try {
+            const rs: any = await accountModels.select(db, id_side, id_safety, id_type, id_notype);
             reply.status(HttpStatus.OK).send({ statusCode: HttpStatus.OK, results: rs })
         } catch (error) {
             fastify.log.error(error);
